@@ -15,7 +15,7 @@ class Node {
    */
   constructor(data, next = null) {
     this.data = data;
-    this.next = next
+    this.next = next;
   }
 }
 
@@ -36,6 +36,9 @@ class LinkedList {
    * RETURNS:   None
    */
   constructor() {
+    this.head = null;
+    this.tail = null;
+    this.length = 0;
     // TODO
   }
 
@@ -49,6 +52,23 @@ class LinkedList {
    */
   addStudent(newStudent) {
     // TODO
+    
+    if (this.head == null){
+      this.head = new Node(newStudent);
+      this.length++;
+    }
+    else if (this.tail == null){
+      let newstud = new Node(newStudent);
+      this.tail = newstud;
+      this.head.next = newstud;
+      this.length++;
+    } else {
+      let newstud = new Node(newStudent);
+      this.tail.next = newstud;
+      this.tail = newstud;
+      this.length++;
+    }
+    
   }
 
   /**
@@ -61,6 +81,42 @@ class LinkedList {
    */
   removeStudent(email) {
     // TODO
+    let node = this.head;
+    let prev = null;
+
+    if (node.next == null) {
+      if (email == node.data.getEmail()){
+        this.head = null;
+        this.length = 0;
+      }
+    } else {
+
+      while (node.next){
+       if (email == node.data.getEmail()){
+          if (prev == null){
+            this.head = node.next;
+            this.length--;
+          } else {
+            prev.next = node.next;
+            this.length--;
+         }
+       }
+
+
+       prev = node;
+       node = node.next;
+     }
+
+     if (node.next == null){
+       if (email == node.data.getEmail()){
+          prev.next = null;
+          this.tail = prev;
+          this.length--;
+       }
+      
+      }
+    }
+
   }
 
   /**
@@ -70,6 +126,16 @@ class LinkedList {
    */
   findStudent(email) {
     // TODO
+    let node =  this.head;
+  
+    while (node){
+      if (email == node.data.getEmail()){
+        return node.data;
+      }
+      node = node.next;
+
+    }
+
     return -1
   }
 
@@ -79,6 +145,9 @@ class LinkedList {
    * RETURNS:   None
    */
   #clearStudents() {
+    this.head = null;
+    this.tail = null;
+    this.length = 0;
     // TODO
   }
 
@@ -92,7 +161,25 @@ class LinkedList {
    */
   displayStudents() {
     // TODO
-    return "";
+    let node = this.head;
+    
+    let names= "";
+    if (node == null){
+      return "empty";
+    }
+    if (node.next == null){
+      return node.data.getName();
+    }
+
+    names = names + node.data.getName();
+    node = node.next;
+
+    while (node != null){
+      names = names + ", " + node.data.getName();
+      node = node.next;
+    }
+  
+    return names;
   }
 
   /**
@@ -102,7 +189,28 @@ class LinkedList {
    */
   #sortStudentsByName() {
     // TODO
-    return [];
+    let students = [];
+    let node = this.head;
+    while (node){
+      students.push(node.data);
+      node = node.next;
+    }
+
+    students.sort((student1, student2) => {
+      let name1 = student1.getName();
+      let name2 = student2.getName();
+
+      if (name1 < name2) {
+        return -1;
+      } if (name1 > name2){
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    
+    return students;
   }
 
   /**
@@ -114,7 +222,15 @@ class LinkedList {
    */
   filterBySpecialization(specialization) {
     // TODO
-    return [];
+    let studentsSpec= [];
+    let students = this.#sortStudentsByName();
+
+    for (let student of students){
+      if (student.getSpecialization() == specialization) {
+        studentsSpec.push(student);
+      }
+    }
+    return studentsSpec;
   }
 
   /**
@@ -126,7 +242,15 @@ class LinkedList {
    */
   filterByMinAge(minAge) {
     // TODO
-    return [];
+    let studentsAge = [];
+    let students = this.#sortStudentsByName();
+    
+    for (let student of students){
+      if (student.getYear() >= minAge){
+        studentsAge.append(student);
+      }
+    }
+    return studentsAge;
   }
 
   /**
@@ -135,6 +259,34 @@ class LinkedList {
    * RETURNS:   None
    */
   async saveToJson(fileName) {
+
+    let node = this.head;
+    let students = [];
+    
+
+    while (node != null){
+      let name = node.data.getName();
+      let year = node.data.getYear();
+      let email = node.data.getEmail();
+      let specialization  = node.data.getSpecialization();
+
+      
+      students.push({"name": name, "year": year, "email":email, "specialization":specialization});
+      node = node.next;
+    }
+
+
+   
+
+    let fs = require("fs");
+    fs.writeFile(fileName, JSON.stringify(students), (err) => {
+      if (err){
+
+      } else { 
+
+      }
+    });
+
     // TODO
   }
 
@@ -147,6 +299,30 @@ class LinkedList {
    */
   async loadFromJSON(fileName) {
     // TODO
+
+    if (fileName == "") {
+      this.#clearStudents();
+    } else {
+    let fs = require("fs");
+
+    return new Promise(((accept, reject) => {
+      fs.readFile(fileName, (err, data) => {
+      
+        let students = JSON.parse(data);
+        this.#clearStudents();
+      
+        for (let student of students){
+          let stud = new Student(student.name, student.year, student.email, student.specialization);
+          this.addStudent(stud);
+        }
+
+        accept(); 
+      });
+
+    }));
+
+  }
+
   }
 
 }
